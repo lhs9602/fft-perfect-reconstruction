@@ -1,0 +1,377 @@
+첨부: 문법 예시 실행 출력 (구현 단계 보조 자료)
+작성일: 2026-09-28
+
+05_Python 문법 길잡이.md 에 실을 예시의 초안을 프로젝트 가상환경(Python 3.11.0)에서 실행한 출력이다.
+문서에 실린 최종 예시와 글자까지 같지는 않다. 최종 예시의 대조 결과는 아래 "문서 대조 결과"에 있다.
+pytest 항목은 임시 폴더에 pytest.ini(pythonpath = src, testpaths = tests), src/temperature.py,
+tests/test_temperature.py 를 두고 실행한 결과다. 임시 폴더는 프로젝트 밖에 있다.
+
+================ 예시 실행 출력 ================
+
+--- 숫자
+2 6 2.5 1024
+3.5 3 -4 2 -2 3.0
+--- 리스트
+5 21.5 22.4
+[23.0, 19.8] [19.8, 25.1, 22.4] [21.5, 23.0]
+[22.4, 25.1, 19.8, 23.0, 21.5]
+[21.5, 19.8, 22.4]
+[0, 0, 0, 0]
+[1, 2, 3, 4]
+[21.5, 23.0, 19.8, 25.1, 22.4, 20.0]
+99.9 6 9 1
+[100, 2, 3]
+[1, 2, 3] [100, 2, 3]
+--- 반복
+5500
+0 1200
+1 800
+2 3500
+[0, 1, 2, 3, 4] [2, 3, 4, 5] [0, 4, 8]
+0 사과
+1 배
+2 감
+사과 1200
+배 800
+감 3500
+6
+--- 조건
+B
+--- 함수
+3 12 10
+1 9
+--- 복소수
+3.0 4.0 5.0 (3-4j)
+(-4+3j) (4+2j) (1.5+2j)
+(2-1j) (5+0j)
+0.0 1.0
+1.5707963267948966 1.0
+<class 'float'> 2.0
+--- math
+3.141592653589793 1.0 1.0 4.0
+3.0 3.0 2 3
+False True 0.30000000000000004
+--- bytes
+4096 16
+-2 65534
+b'\x00\x04' b'\xfe\xff'
+4 1 b'\x01\x02' b'\x01\x02\x03\x04\x05' b'\x01\x02'
+OverflowError: int too big to convert
+--- 반올림
+0 2 2 2 -2 3.14
+100 0 77
+--- 오류
+잘못된 값: 나이는 0 이상이어야 한다: -3
+--- 내포
+[0, 1, 4, 9, 16] [2400, 1600, 7000] [1200, 3500]
+--- 비트
+10 5 2 7 0b1010 10 0101 cba
+4 4 512
+--- 문자열
+3.142 3.141593e+00    12| 이름: 3.1
+--- 시간
+4999950000 True
+--- 파일
+'첫 줄\n둘째 줄\n'
+--- numpy
+[2. 4. 6.] [2. 4. 6.] 6.0 3 float64
+[0. 0. 0.] [0 1 2 3] [1.0, 2.0, 3.0]
+[ 1  2 -1]
+b'\x01\x00\xfe\xff\x03\x00'
+
+================ pytest 실행 출력 ================
+
+============================= test session starts =============================
+platform win32 -- Python 3.11.0, pytest-9.1.1, pluggy-1.6.0 -- D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\todoc\AppData\Local\Temp\claude\D--Claude\d332ccc0-fa1a-41bf-ae3c-38466815d747\scratchpad\syn
+configfile: pytest.ini
+testpaths: tests
+collecting ... collected 2 items
+
+tests/test_temperature.py::test_boiling_point PASSED                     [ 50%]
+tests/test_temperature.py::test_body_temperature PASSED                  [100%]
+
+============================== 2 passed in 0.02s ==============================
+
+================ 문서 대조 결과 ================
+
+05_Python 문법 길잡이.md 의 python 코드 블록을 하나씩 실행해, 바로 뒤에 적힌 출력 블록과 비교했다.
+  출력 블록이 있는 python 블록: 33개, 일치 33개, 불일치 0개
+  출력 블록이 없는 python 블록: 2개 (src/temperature.py 와 tests/test_temperature.py 의 파일 내용. 위 pytest 실행으로 확인)
+
+================ 본문 서술 확인 ================
+
+[주장_1] 함수 안에서 만든 변수는 밖에서 보이지 않는다
+   NameError: name 'inner' is not defined
+[주장_2] 리스트를 인자로 넘기면 복사되지 않는다
+   [100, 2, 3]
+[주장_3] 실행한 파일의 폴더가 모듈 검색 경로의 첫째다
+   sys.path[0] == 실행 파일 폴더: True
+[주장_4] 같은 이름의 파일이 표준 라이브러리를 가린다
+   wave 모듈의 출처: local file
+[주장_5] matplotlib 기본 글꼴로 한글 제목을 그릴 때
+   경고 수: 4
+   경고: Glyph 50900 (\N{HANGUL SYLLABLE WEOL}) missing from font(s) DejaVu Sans.
+   경고: Glyph 48324 (\N{HANGUL SYLLABLE BYEOL}) missing from font(s) DejaVu Sans.
+
+================ 환경 확인 (2026-09-29) ================
+
+01_프로젝트 구성과 실행 환경.md 에 적은 내용을 실행해 확인한 출력이다.
+
+[환경_0] PowerShell에서 가상환경 켜고 끄기
+   켜기 전 python 경로   : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+   .venv\Scripts\Activate.ps1 실행 후
+     python 경로         : D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+     python --version    : Python 3.11.0
+     sys.prefix          : D:\Claude\projects\fft-perfect-reconstruction\.venv
+     python -m pytest --version : pytest 9.1.1
+   deactivate 실행 후 python 경로: C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+   실행 정책(Get-ExecutionPolicy -List): MachinePolicy, UserPolicy, CurrentUser, LocalMachine 모두 Undefined
+     (확인에 쓴 세션의 Process 범위는 Bypass 였다. 사용자의 일반 터미널과 다를 수 있다)
+   cmd 에서 .venv\Scripts\activate.bat 실행 후 where python 첫 줄:
+     D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+[환경_1] Git Bash에서 켠 뒤의 프롬프트 변수
+   VIRTUAL_ENV_PROMPT=(.venv)
+   PS1 앞부분: (.venv)
+[환경_2] pytest 파일 지정 (python -m pytest tests/test_temperature.py)
+   2 passed in 0.02s
+[환경_3] pytest -k boiling
+   1 passed, 1 deselected in 0.01s
+[환경_4] 상대 경로는 실행한 위치 기준
+   프로젝트 폴더에서 python src/rel.py 실행 -> data/input/a.txt 를 읽어 hello 출력
+   src 폴더로 들어가 python rel.py 실행   -> FileNotFoundError: [Errno 2] No such file or directory: 'data/input/a.txt'
+
+================ 2부 추가 뒤 문서 대조 결과 (2026-09-29) ================
+
+05_Python 문법 길잡이.md 에 2부(20절 ~ 29절)를 더한 뒤 python 코드 블록 전체를 다시 실행했다.
+  출력 블록이 있는 python 블록: 51개, 일치 51개, 불일치 0개
+  출력 블록이 없는 python 블록: 3개 (src/temperature.py, tests/test_temperature.py, show_args.py 의 파일 내용)
+  show_args.py 는 python show_args.py data/input/tone.wav data/output/tone.wav 로 실행해
+    ['show_args.py', 'data/input/tone.wav', 'data/output/tone.wav'] 와 3 이 나오는 것을 확인했다.
+
+처음 적은 출력 가운데 실제와 달라 고친 것 6건:
+  struct.error 의 글귀, complex(5) 와 complex(2.5) 의 출력 모양, 500 & 499 == 0 의 결과(False),
+  가장 큰 차이 예시의 값(1.5), numpy 배열의 출력 모양, 복원율 표의 칸 맞춤
+  이 가운데 500 & 499 == 0 은 설명도 틀렸다. Python 에서는 & 가 == 보다 먼저 계산된다.
+
+
+================ filecmp 예시를 더한 뒤 문서 대조 결과 (2026-09-29) ================
+
+05_Python 문법 길잡이.md 29절에 filecmp.cmp 예시를 더한 뒤 python 코드 블록 전체를 다시 실행했다.
+  출력 블록이 있는 python 블록: 52개, 일치 52개, 불일치 0개
+  더한 예시의 출력: True, False (내용이 같은 두 파일, 마지막 바이트가 다른 두 파일)
+  shallow 의 뜻은 설치된 Python 3.11.0 의 filecmp.cmp 설명글과 Python 3.11 문서에서 확인했다:
+    shallow -- treat files as identical if their stat signatures (type, size, mtime) are identical.
+               Otherwise, files are considered different if their sizes or contents differ.  [default: True]
+================ 단계_0 을 시작해도 되는지 확인 (2026-09-29, 사용자 요청) ================
+
+[환경_5] 새 PowerShell 창(powershell -NoProfile)에서 가상환경 켜기
+   Get-ExecutionPolicy            : Restricted
+   Get-ExecutionPolicy -List      : MachinePolicy, UserPolicy, Process, CurrentUser, LocalMachine 모두 Undefined
+   & .\.venv\Scripts\Activate.ps1 :
+     & : 이 시스템에서 스크립트를 실행할 수 없으므로 D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\Activate.ps1
+     파일을 로드할 수 없습니다. 자세한 내용은 about_Execution_Policies(https://go.microsoft.com/fwlink/?LinkID=135170)를 참조하십시오.
+         + CategoryInfo          : 보안 오류: (:) [], PSSecurityException
+         + FullyQualifiedErrorId : UnauthorizedAccess
+   오류 뒤 (Get-Command python).Source : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+   오류 뒤 python --version            : Python 3.11.0   (전역 Python 도 같은 버전이다)
+   오류 뒤 python -m pytest --version  : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe: No module named pytest
+   실행 정책은 읽기만 했고 바꾸지 않았다.
+   앞의 확인(위 '환경 확인' 절)에서는 Activate.ps1 이 실행되었다. 그때 확인에 쓴 세션은 Process 범위가 Bypass 였다.
+
+[환경_6] 명령 프롬프트(cmd)에서 가상환경 켜기
+   .venv\Scripts\activate.bat 뒤 where python :
+     D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+     C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+     C:\Users\todoc\AppData\Local\Microsoft\WindowsApps\python.exe
+   python --version : Python 3.11.0,  python -m pytest --version : pytest 9.1.1
+   deactivate 뒤 where python 의 첫 줄 : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+
+[환경_7] 명령 프롬프트에서 드라이브가 다를 때의 cd
+   C:\ 에서 cd D:\Claude\projects\fft-perfect-reconstruction 뒤 cd    : C:\   (바뀌지 않는다)
+   C:\ 에서 cd /d D:\Claude\projects\fft-perfect-reconstruction 뒤 cd : D:\Claude\projects\fft-perfect-reconstruction
+
+[환경_8] Git Bash 에서 source .venv/Scripts/activate 뒤 where python 의 첫 줄
+   D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+
+[환경_9] PowerShell 에서 켜지 않고 쓰기
+   .venv\Scripts\python.exe -m pytest --version          : pytest 9.1.1
+   .venv\Scripts\python.exe -c "import sys; print(sys.prefix)" : D:\Claude\projects\fft-perfect-reconstruction\.venv
+
+[환경_10] 프로젝트 폴더에서 python -m pytest (시험 파일이 없는 지금 상태)
+   rootdir: D:\Claude\projects\fft-perfect-reconstruction
+   configfile: pytest.ini
+   testpaths: tests
+   collected 0 items
+   no tests ran in 0.03s
+
+[환경_11] 단계_0 모의 실행. 프로젝트와 같은 구성(pytest.ini, src, tests)을 임시 폴더에 만들어 실행했다.
+   프로젝트의 src, tests 에는 파일을 만들지 않았다.
+   python src/hello.py                 : hello from src
+   python -m pytest                    : tests\test_hello.py .   1 passed in 0.02s
+   cmd 에서 activate.bat 뒤 같은 명령  : hello from src / 1 passed in 0.01s
+
+[환경_12] 04 의 0.3 절이 제안한 파일 이름이 다른 것과 겹치는지
+   config, wav_io, dft, fft, window, framing, stft, metrics, main 을 빈 파일로 만들고
+   numpy, numpy.fft, matplotlib.pyplot, pytest, wave, cmath, math, struct, array, collections, filecmp, testvec 과 함께 불러왔다.
+   오류 없음. 표준 라이브러리와 이름이 같은 것: 없음. 그 상태에서 pytest 1 passed.
+
+[환경_13] 04 단계_0 에 적은 명령을 명령 프롬프트에서 그대로 실행
+   where python (첫 줄) : D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+   python --version     : Python 3.11.0
+   python -m pytest -v  : collected 0 items, no tests ran (시험 파일이 아직 없다)
+   python -c "import sys; sys.path.insert(0, 'src'); import testvec; print(len(testvec.FFT_CASES))" : 5
+
+[환경_14] VS Code 와 확장 (code --version, code --list-extensions)
+   VS Code 1.139.1
+   ms-python.python 2026.4.0, ms-python.vscode-pylance 2026.4.1, ms-python.debugpy 2026.6.0,
+   ms-python.vscode-python-envs 1.38.0, ms-vscode.hexeditor 1.11.1
+   사용자 설정 파일(%APPDATA%\Code\User\settings.json)에 terminal.integrated, python. 으로 시작하는 줄: 없음
+   ms-python.vscode-python-envs 의 package.json : python-envs.terminal.autoActivationType 기본값 "command"
+   ms-python.python 의 package.json            : python.terminal.activateEnvironment 기본값 true,
+                                                 python.useEnvironmentsExtension 기본값 false
+   VS Code 안의 터미널에서 실제로 켜지는지는 확인하지 못했다.
+
+[환경_15] 02 가 인용한 1.5 펌웨어의 줄을 다시 대조 (작업 폴더의 현재 파일, 마지막 커밋 de113b8)
+   main.c 88, 123, 191-208, 227, 229-236, 294 / audioMixer.c 32, 80-90 / FrequencyAnalysis.c 33-44, 96
+   definitionsForAlgorithm.h 39-40, 56, 100, 106(AUDIO_INPUT_RSHIFT 5) / lib_audio_in.c 114-121, 129, 144
+   microcode.hct 14, 18, 79-80, 143, 172-198 / ci_fft.c 594(0, 317, 1268, 2853), 598(4207196), 602(끝 값 8388527), 606-618
+   표 594-602 줄의 값 개수 256. 번역본 ch03b 27-30 줄. 모두 문서의 서술과 같다.
+
+[환경_16] 수치 재계산 (numpy 로 따로 계산)
+   내부 FFT 와 numpy.fft.fft 의 최대 차이 1.899e-14, 수식 윈도우와 numpy.hanning(512) 의 최대 차이 4.441e-16
+   윈도우 합 최소 15.968700335684 최대 15.968832743823
+   프레임 31 칸 32 크기 1277512.515, 칸 31 640628.712, 칸 33 640628.676
+   복원 최대 오차 5.457e-12, 반올림 후 다른 샘플 0, 프레임 수 1031
+================ 사용자가 PowerShell 에서 실행한 결과와 그 확인 (2026-09-29) ================
+
+[환경_17] 사용자가 붙여 준 출력 (프롬프트 PS D:\Claude\projects\fft-perfect-reconstruction>)
+   where python        : 출력 없음
+   python --version    : Python 3.11.0
+   python src\hello.py : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe: can't open file ... [Errno 2] No such file or directory
+   python -m pytest -v : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe: No module named pytest
+   읽은 것: 프롬프트가 PS 로 시작하므로 PowerShell 이다. 오류 글의 경로가 전역 Python 이다. hello.py 는 아직 만들지 않은 파일이다.
+
+[환경_18] PowerShell 의 where
+   Get-Alias where          : where -> Where-Object
+   where python             : 출력 없음
+   where.exe python         : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe (첫 줄)
+   (Get-Command python).Source : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+
+[환경_19] PowerShell 에서 가상환경의 Python 을 경로로 부르기
+   .venv\Scripts\python.exe --version          : Python 3.11.0
+   .venv\Scripts\python.exe -m pytest --version : pytest 9.1.1
+   sys.executable  : D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+   sys.prefix      : D:\Claude\projects\fft-perfect-reconstruction\.venv
+   sys.base_prefix : C:\Users\todoc\AppData\Local\Programs\Python\Python311
+
+[환경_20] PowerShell 안에서 cmd 를 열어 켜기 (cmd /c ".venv\Scripts\activate.bat && where python && python -m pytest --version")
+   where python 첫 줄 : D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+   pytest 9.1.1
+
+[환경_21] 가상환경 폴더의 실체
+   .venv 의 내용 : Include, Lib, Scripts, share, pyvenv.cfg.  크기 164M
+   pyvenv.cfg :
+     home = C:\Users\todoc\AppData\Local\Programs\Python\Python311
+     include-system-site-packages = false
+     version = 3.11.0
+     executable = C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe
+     command = C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe -m venv D:\Claude\projects\fft-perfect-reconstruction\.venv
+   Scripts 의 내용 : Activate.ps1 activate activate.bat deactivate.bat pip.exe pytest.exe python.exe pythonw.exe 외
+   켠 뒤 PATH 의 앞부분 : D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts;C:\Users\todoc\...
+
+[환경_22] 패키지 비교
+   가상환경 : numpy 2.4.6 | matplotlib 3.11.2 | pytest 9.1.1
+   전역     : numpy 2.4.6 | matplotlib 3.11.2 | pytest 없음 (No module named pytest)
+================ 단일 파일 구성으로 바꾼 뒤의 확인 (2026-09-29) ================
+
+[환경_23] 빈 파일 src/main.py, tests/test_main.py 를 만든 뒤 (둘 다 0바이트)
+   python src/main.py  : 출력 없음, 종료 코드 0
+   python -m pytest    : collected 0 items, no tests ran in 0.04s
+
+[환경_24] 단일 파일 구성의 모의 실행 (임시 폴더. main.py 에 함수 하나, 맨 바깥의 print, if __name__ == "__main__" 아래의 print)
+   python src/main.py  : top-level line ran / main block ran
+   python -m pytest -s : top-level line ran / 1 passed   (시험 파일은 from main import double, import testvec as tv)
+   읽은 것: 시험이 main 을 불러올 때 맨 바깥의 코드는 실행되고, if __name__ == "__main__" 아래는 실행되지 않는다.
+
+[환경_25] 06 의 python 블록 8개를 from main import ... 로 바꾼 뒤 실행 (대역 main.py 에 fft, ifft, make_window, apply_window)
+   8개 모두 exit 0. 블록 1 '5개 중 5개 통과', 블록 3 '3개 중 3개 통과', 블록 5 test_fft 통과, 블록 6 100.0
+
+================ 사용자가 PowerShell 에서 다시 실행한 결과와 그 확인 (2026-09-29) ================
+
+[환경_26] 사용자가 붙여 준 출력 (프롬프트 PS D:\Claude\projects\fft-perfect-reconstruction>)
+   where python        : 출력 없음
+   python -m pytest -v : C:\Users\todoc\AppData\Local\Programs\Python\Python311\python.exe: No module named pytest
+   python src\main.py  : main.py 실행
+   읽은 것: PowerShell 이고 전역 Python 이 돌았다. main.py 는 표준 라이브러리만 불러오므로 전역 Python 으로도 실행된다.
+
+[환경_27] 실행 정책이 Restricted 인 새 PowerShell 창에서 PATH 를 직접 고침
+   $env:PATH = "$PWD\.venv\Scripts;" + $env:PATH
+   (Get-Command python).Source : D:\Claude\projects\fft-perfect-reconstruction\.venv\Scripts\python.exe
+   python --version            : Python 3.11.0
+   python -m pytest --version  : pytest 9.1.1
+   sys.prefix                  : D:\Claude\projects\fft-perfect-reconstruction\.venv
+
+[환경_28] 사용자가 쓴 tests/test_main.py (05 의 16절 기온 예시를 옮긴 것, 213바이트) 를 가상환경의 Python 으로 실행
+   tests\test_main.py:3: in <module>
+       from temperature import to_fahrenheit
+   E   ModuleNotFoundError: No module named 'temperature'
+   1 error in 0.31s
+   읽은 것: src/temperature.py 가 없다. 05 의 15절 예시 파일이다.
+
+[환경_29] 가장 작은 시험 (def test_addition(): assert 1 + 1 == 2) 을 같은 구성의 임시 폴더에서 실행
+   tests/test_main.py::test_addition PASSED
+   1 passed in 0.04s
+   PowerShell 에서 환경_27 의 한 줄을 친 뒤 python -m pytest -v : 1 passed
+
+[환경_30] 전역 Python 에 pytest 를 설치하면 더해지는 것 (pip install --dry-run 으로 보기만 했다. 설치하지 않았다)
+   Would install Pygments-2.21.0 colorama-0.4.6 iniconfig-2.3.0 pluggy-1.6.0 pytest-9.1.1
+
+[환경_31] 05 의 python 블록을 다시 실행 (16절에 가장 작은 시험을 더한 뒤)
+   출력 블록이 있는 python 블록 52개 일치, 불일치 0개. 더한 블록은 시험 파일의 내용이어서 출력 블록이 없는 것으로 센다.
+================ 실행 순서 예시 (2026-09-29, 사용자 질문 'main 이 가장 먼저 실행되는 것이 아닌가') ================
+
+[문법_1] order.py 를 직접 실행 (python order.py)
+   1. 파일의 첫 줄
+   2. def 는 함수를 만들어 둘 뿐이다. 아직 실행되지 않았다
+   3. __name__ 의 값: __main__
+   4. main 함수 안
+   5. main 보다 아래에 만든 함수
+
+[문법_2] 다른 파일에서 불러옴 (import order)
+   1. 파일의 첫 줄
+   2. def 는 함수를 만들어 둘 뿐이다. 아직 실행되지 않았다
+   3. __name__ 의 값: order
+
+[문법_3] 불러온 뒤 order.main() 을 직접 부름
+   위 세 줄 뒤에 4. main 함수 안 / 5. main 보다 아래에 만든 함수
+
+[문법_4] 만들기 전에 부름 (greet() 다음 줄에 def greet)
+   NameError: name 'greet' is not defined
+
+[문법_5] 함수 이름을 start 로 바꾸고 맨 아래에서 start() 를 부름
+   start 함수 안
+
+[문법_6] def main 만 있고 맨 아래 두 줄이 없음
+   출력 없음, 종료 코드 0
+
+[문법_7] 05 의 python 블록을 다시 실행 (15.1 절을 더한 뒤)
+   출력 블록이 있는 python 블록 53개 일치, 불일치 0개
+================ 05 를 다시 짠 뒤의 확인 (2026-09-29, 사용자 요청 '이 프로젝트에 쓸만한 것, 자료형 선언, 목차') ================
+
+[문법_8] 새로 넣은 2절(자료형) 예시의 실행 출력
+   2.1  int 3 / float 0.5 / complex (3+4j) / bool True / str sample / bytes b'\x01\x02' / list [1, 2, 3] / tuple (1, 2) / dict {'a': 1} / NoneType None
+   2.2  int / str / True False True
+   2.3  2 -2 42 / 3.0 1.5 / (2+0j) (2-1j) / [1, 2, 3] (4, 5) / 2.5 (2+1j)
+   2.4  32768 / 1180591620717411303424 / 1.7976931348623157e+308 / 53
+        3.5 3 1 / -4 1 / -3
+   2.5  [0, 0, 0, 0, 0] [0j, 0j, 0j] / 5 / 6
+        2 [0, 32767] / OverflowError: signed short integer is greater than maximum
+   2.6  2.3333333333333335 / 2.3333333333333335 / {'values': list[float], 'return': <class 'float'>}
+   18절 0으로 나누기: ZeroDivisionError: division by zero
+
+[문법_9] 새 05 의 python 블록 전체를 실행해 바로 뒤의 출력 블록과 대조
+   출력 블록이 있는 python 블록 60개 일치, 불일치 0개. 출력 블록이 없는 것 5개(파일 내용: temperature.py, order.py, show_args.py, test_temperature.py, 가장 작은 시험)
+   python 블록 수: 옛 문서 58, 새 문서 65 (자료형 8개와 0으로 나누기 1개를 더하고, 글자 파일 쓰기 1개와 로그 1개를 뺐다)
+   문서 안 링크(목차, 하고 싶은 일로 찾기) 83개가 모두 있는 제목을 가리킨다

@@ -1,0 +1,31 @@
+겹침 없는 복원(04 중간_1) 검산 출력
+실행: 2026-09-30, 프로젝트 .venv (Python 3.11.0), 사본 폴더(scratchpad)에서 실행. 프로젝트 파일은 바꾸지 않음
+입력: data/input/sine_1k.wav (16 kHz, 모노, 16bit, 16,000샘플)
+절차: 512개씩 겹치지 않게 자름 -> 마지막 블록 0 채우기 -> 블록마다 dft 뒤 역 DFT -> 실수부 이어 붙이기 -> 입력 길이로 자르기 -> 반올림, 16bit 범위 자르기 -> write_wav -> tv.compare_wav
+dft: src/main.py 의 dft (사용자가 쓴 것)
+역 DFT: 공식_3 을 그대로 옮긴 사본 함수 (idft 는 사용자가 쓸 차례라 코드는 남기지 않음)
+
+[1] numpy FFT 로 같은 절차 (참고)
+L 16000 blocks 32 last block real samples 128 pad 384
+out len before trim 16384
+max diff before rounding 3.637978807091713e-12
+identical ints True
+compare_wav: 복원율 100.0000 %, 판정: 완전 복원 (샘플은 전부 같다. 헤더 등이 다르다)
+one dft s 0.162
+
+[2] 사용자의 dft + 정의식 역 DFT
+time full 9.5 s
+max diff before rounding 2.091837814077735e-09
+identical True
+compare_wav: 복원율 100.0000 %, 판정: 완전 복원
+
+[3] 일부러 틀린 경우 (같은 절차에서 한 곳만 바꿈)
+round(complex(1, 0)) -> TypeError type complex doesn't define __round__ method
+no_divide (역 DFT 에서 N 으로 나누지 않음): len 16000
+  compare_wav: 복원율 12.5000 %, 판정: 복원되지 않았다
+  힌트: 다른 샘플 중 14000개가 -32768 또는 32767 이다. 값이 너무 커서 잘렸을 수 있다.
+no_trim (입력 길이로 자르지 않음): len 16384
+  compare_wav: 복원율 100.0000 %, 길이가 다르다. 원본 16000개, 복원 16384개.
+  판정: 겹친 구간은 같고 길이가 다르다. 샘플 수를 확인한다
+window (대칭형 Hanning 512 를 곱함, 겹침 없음): len 16000
+  compare_wav: 복원율 12.7125 %, 판정: 복원되지 않았다

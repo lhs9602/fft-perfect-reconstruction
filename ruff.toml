@@ -1,0 +1,14 @@
+# Ruff 설정. Ruff 는 검사(밑줄)만 한다. 줄 정리는 yapf 가 한다 (.style.yapf)
+# 줄 길이 기준. 주석을 줄 제한에 넣지 않으려고 사실상 제한을 없앴다 (주석만 빼는 설정은 없다)
+line-length = 1000
+target-version = "py311"  # 이 프로젝트의 Python 버전
+
+[lint]
+select = [
+    "E",    # pycodestyle: 띄어쓰기, 줄 모양
+    "F",    # Pyflakes: 안 쓰는 import, 없는 이름
+    "UP",   # pyupgrade: 옛날 문법을 새 문법으로
+    "B",    # flake8-bugbear: 버그가 되기 쉬운 모양
+    "SIM",  # flake8-simplify: 더 짧게 쓸 수 있는 모양
+    "I",    # isort: import 순서
+]

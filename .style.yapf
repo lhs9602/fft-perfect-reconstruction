@@ -1,0 +1,10 @@
+# yapf style for VS Code formatting (Shift+Alt+F, format on save).
+# Keep this file ASCII only: yapf reads it with the Windows default encoding (cp949).
+[style]
+based_on_style = pep8
+# No real line limit, so trailing comments never force a line split (same as ruff.toml).
+column_limit = 1000
+# Trailing comments in a block line up at the first column past the longest code line.
+# A comment-only line right after a line with a trailing comment is pushed to that column,
+# so put a blank line before it.
+spaces_before_comment = 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160

@@ -1,0 +1,61 @@
+---
+title: "WAV 완전 복원 파이프라인"
+config:
+  theme: base
+  themeVariables:
+    darkMode: false
+    background: "#fafafa"
+    primaryColor: "#eef0f3"
+    primaryTextColor: "#374151"
+    primaryBorderColor: "#7a8896"
+    lineColor: "#475569"
+    fontFamily: "Pretendard, Apple SD Gothic Neo, sans-serif"
+    fontSize: "12px"
+    clusterBkg: "#fafafa"
+    clusterBorder: "#cfd8dc"
+    edgeLabelBackground: "#ffffff"
+  flowchart:
+    curve: monotoneY
+    nodeSpacing: 30
+    rankSpacing: 30
+    padding: 12
+    htmlLabels: true
+---
+flowchart TD
+    subgraph canvas [" "]
+        direction TB
+
+        Start(["입력 WAV<br/>16 kHz, 모노, 16bit"])
+        Read[/"WAV 읽기<br/>단계_1"/]
+        Feed("16샘플씩 꺼내기<br/>단계_6")
+        Buf[("512칸 버퍼<br/>처음에는 전부 0")]
+        Win("윈도우 곱<br/>단계_5, 단계_7")
+        Fft[["FFT 512점<br/>단계_3"]]
+        Spec@{ shape: doc, label: "스펙트럼<br/>복소수 512개" }
+        Ifft[["IFFT 512점<br/>단계_4"]]
+        Ola("겹쳐 더하기<br/>단계_8")
+        Norm{{"위치별 윈도우 합으로<br/>나누기"}}
+        Save[/"WAV 저장<br/>단계_9"/]
+        Check((("입력과 비교<br/>단계_10")))
+
+        Start ==> Read ==> Feed ==> Buf ==> Win ==> Fft ==> Spec
+        Spec ==> Ifft ==> Ola ==> Norm ==> Save ==> Check
+        Read -. "원본 샘플" .-> Check
+
+        classDef terminal fill:#ede4d3,stroke:#8f7b5f,stroke-width:3px,color:#4a3d29
+        classDef step     fill:#eceff3,stroke:#7a8896,stroke-width:3px,color:#374151
+        classDef io       fill:#dde6ee,stroke:#6c849c,stroke-width:3px,color:#2a3f55
+        classDef trigger  fill:#ecdcbb,stroke:#967336,stroke-width:3px,color:#5a3e1b
+        classDef core     fill:#dee6d4,stroke:#708356,stroke-width:3px,color:#3d4c2b
+
+        class Start,Check terminal
+        class Feed,Win,Ola step
+        class Read,Save,Buf io
+        class Norm trigger
+        class Fft,Ifft,Spec core
+
+        linkStyle default stroke-width:3px
+        linkStyle 11 stroke:#7a6e8c,stroke-width:2px,stroke-dasharray:6 4
+    end
+
+    style canvas fill:#fafafa,stroke:#cfd8dc,stroke-width:1px

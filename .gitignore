@@ -1,0 +1,17 @@
+# Python virtual environment
+.venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated audio (keep the folder, ignore the results)
+data/output/*
+!data/output/.gitkeep
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

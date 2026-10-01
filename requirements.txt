@@ -1,0 +1,6 @@
+# fft-perfect-reconstruction dependencies
+# Installed into .venv on 2026-09-28 (Python 3.11.0).
+# FFT/IFFT are implemented by hand: do not use numpy.fft or any other FFT library.
+numpy==2.4.6
+matplotlib==3.11.2
+pytest==9.1.1
