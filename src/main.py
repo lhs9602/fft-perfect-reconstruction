@@ -30,11 +30,13 @@ def read_wav(path):
     print("프레임 수:", frames)
     print("길이:", frames / rate, "초")  # 프레임 수 / 샘플링 주파수
 
-    # 샘플 폭(width) 바이트씩 잘라 little-endian 부호 있는 정수로 바꾼다
-    # range(0, len(data), width) = 0, width, width * 2, ... (샘플 하나가 width 바이트)
-    # data[i:i + width] = i 번째부터 width 바이트 (i + width 번째는 들어가지 않는다)
-    samples = [int.from_bytes(data[i : i + width], "little", signed=True) for i in range(0, len(data), width)]
-    samples = [sample / SCALE for sample in samples]  # -1 <= x < 1 의 float 으로 바꾼다
+    # 2 바이트씩 묶어 little-endian 부호 있는 16bit 정수로 바꾼다
+    samples = []  # 샘플을 담을 리스트
+    for i in range(0, len(data), 2):  # i = 0, 2, 4, ... (샘플 하나가 2 바이트)
+        value = data[i] + data[i + 1] * 256  # 아래 바이트 + 위 바이트 * 256 (0 ~ 65535)
+        if value >= 32768:  # 맨 위 비트가 1 이면 음수다
+            value = value - 65536  # -32768 ~ -1 로 바꾼다
+        samples.append(value / SCALE)  # -1 <= x < 1 의 float 으로 바꿔 붙인다
     return samples, channels, width, rate  # 샘플, 채널 수, 샘플 폭, 샘플링 주파수
 
 
@@ -181,11 +183,17 @@ def restore_no_overlap(samples):
     size = 512  # 블록 하나의 길이
     restored = []  # 되돌린 값을 이어 붙일 리스트
     for start in range(0, len(samples), size):  # 블록 시작 자리 0, 512, 1024, ...
-        block = samples[start:start + size]  # 이번 블록. 마지막 블록은 512 개보다 짧을 수 있다
-        block = block + [0] * (size - len(block))  # 모자란 만큼 0 을 채워 512 개로 맞춘다
+        block = []  # 이번 블록 512 개를 담을 리스트
+        for off in range(size):  # 블록 안의 번호 off = 0 ~ 511
+            src = start + off  # 꺼낼 샘플 번호
+            if src < len(samples):  # 입력 안이면
+                block.append(samples[src])  # 그 샘플을 붙인다
+            else:  # 입력이 끝난 뒤면
+                block.append(0)  # 0 을 붙인다
         y = ifft(fft(block))  # 주파수 bin 512 개로 바꿨다가 다시 샘플 512 개로 되돌린다 (값은 복소수)
-        restored.extend(value.real for value in y)  # 실수부만 이어 붙인다
-    restored = restored[:len(samples)]  # 0 을 채운 만큼 길어진 끝을 잘라 입력 길이로 맞춘다
+        for pos in range(size):  # 되돌린 값의 번호 pos = 0 ~ 511
+            if start + pos < len(samples):  # 입력 안의 자리만
+                restored.append(y[pos].real)  # 실수부를 붙인다
     return restored  # 복원한 float 리스트
 
 
@@ -200,7 +208,7 @@ def restore_no_overlap(samples):
 #     R    : 프레임 크기. 프레임마다 새로 넣는 샘플 수
 #     i    : 윈도우 안에서의 번호
 #     r    : 프레임 안에서의 위치
-#     q    : 더할 차례. 코드에서는 i 를 R 씩 늘린다
+#     q    : 더할 차례. 코드에서는 idx 를 r 부터 R 씩 늘린다
 #     w[i] : 윈도우의 i번째 값. 0 이상 1 이하의 실수 (코드의 window[i])
 #     W[r] : 위치 r 의 윈도우 합 (코드의 sums[r])
 def hanning_window(N, R):
@@ -212,8 +220,8 @@ def hanning_window(N, R):
     sums = []  # 윈도우 합 sums[0] ~ sums[R-1] 을 담을 리스트
     for r in range(R):  # 위치 r = 0 ~ R-1
         total = 0  # 위치 r 의 합
-        for i in range(r, N, R):  # i = r, r + R, r + 2*R, ...
-            total += window[i]  # w[i] 를 더한다
+        for idx in range(r, N, R):  # idx = r, r + R, r + 2*R, ...
+            total += window[idx]  # w[idx] 를 더한다
         sums.append(total)  # W[r] 을 sums 에 붙인다
     return window, sums  # 윈도우, 위치별 윈도우 합
 
@@ -250,18 +258,19 @@ def analyze(buffer, window):
 #     범위: m = 0 ~ M-1, i = 0 ~ N-1, n = 0 ~ L-1
 #
 # 기호:
-#     N     : 버퍼와 FFT 의 길이 (512)
-#     R     : 프레임 크기. 프레임마다 새로 넣는 샘플 수 (16)
-#     L     : 입력 샘플 수
-#     M     : 프레임 수 (코드의 frame_count)
-#     m     : 프레임 번호
-#     i     : 버퍼 안에서의 번호. 0 이 가장 오래된 샘플
-#     n     : 입력 전체에서의 샘플 번호
+#     N     : 버퍼와 FFT 의 길이 (코드의 buf_len, 512)
+#     R     : 프레임 크기. 프레임마다 새로 넣는 샘플 수 (코드의 step, 16)
+#     L     : 입력 샘플 수 (코드의 total)
+#     M     : 프레임 수 (코드의 frames)
+#     m     : 프레임 번호 (코드의 frame)
+#     i     : 버퍼 안에서의 번호. 0 이 가장 오래된 샘플 (코드의 pos, slot)
+#     n     : 입력 전체에서의 샘플 번호 (코드의 src, dst, idx)
 #     x[n]  : n번째 입력 샘플값 (코드의 samples[n]). n 이 0 보다 작거나 L 이상이면 0 으로 본다
-#     b[i]  : 프레임 m 의 버퍼 (코드의 buffer[i])
+#     b[i]  : 프레임 m 의 버퍼 (코드의 buf[i])
 #     w[i]  : 윈도우의 i번째 값 (코드의 window[i])
 #     v[i]  : 윈도우를 곱한 값
 #     X     : 프레임 m 의 스펙트럼
+#     IFFT(X) : 코드의 windowed
 #     y[n]  : 겹쳐 더한 값 (코드의 added[n])
 #     W[r]  : 위치 r 의 윈도우 합 (코드의 sums[r])
 #     xr[n] : 되돌린 n번째 샘플값 (코드의 restored[n])
@@ -270,26 +279,31 @@ def analyze(buffer, window):
 #     FFT, IFFT : fft 함수, ifft 함수
 def restore_overlap(samples):
     # 겹침 있는 복원. 16 개씩 밀어 넣은 512 칸 버퍼에 윈도우를 곱해 fft 하고, ifft 한 값을 겹쳐 더한 뒤 윈도우 합으로 나눈다
-    N = 512  # 버퍼와 FFT 의 길이
-    R = 16  # 프레임 크기
-    L = len(samples)  # 입력 샘플 수
-    window, sums = hanning_window(N, R)  # 윈도우, 위치별 윈도우 합
-    frame_count = (L + R - 1) // R + N // R - 1  # 프레임 수 M. (L + R - 1) // R 은 L / R 의 올림
-    buffer = [0] * N  # 버퍼. 0 으로 시작한다
-    added = [0] * L  # 겹쳐 더할 값 y[0] ~ y[L-1]. 0 으로 시작한다
-    for m in range(frame_count):  # 프레임 m = 0 ~ M-1
-        new = samples[m * R:(m + 1) * R]  # 새 샘플 m*R ~ (m+1)*R-1 번. 입력의 끝에서는 R 개보다 적거나 없다
-        new = new + [0] * (R - len(new))  # 모자란 만큼 0 을 채워 R 개로 맞춘다
-        buffer = buffer[R:] + new  # 버퍼의 앞 R 개를 버리고 뒤에 새 R 개를 붙인다
-        X = analyze(buffer, window)  # 분석. 프레임 m 의 스펙트럼
-        inverse = ifft(X)  # 합성. 스펙트럼을 되돌린 N 개 값 (복소수)
-        for i in range(N):  # 번호 i = 0 ~ N-1
-            n = (m + 1) * R - N + i  # 더할 자리 (샘플 번호)
-            if 0 <= n < L:  # n 이 0 ~ L-1 이면
-                added[n] += inverse[i].real  # 실수부를 y[n] 에 더한다
-    restored = []  # 결과 xr[0] ~ xr[L-1] 을 담을 리스트
-    for n in range(L):  # 샘플 n = 0 ~ L-1
-        restored.append(added[n] / sums[n % R])  # y[n] 을 위치 n % R 의 윈도우 합으로 나눠 붙인다
+    buf_len = 512  # 버퍼와 FFT 의 길이
+    step = 16  # 프레임마다 새로 넣는 샘플 수
+    total = len(samples)  # 입력 샘플 수
+    window, sums = hanning_window(buf_len, step)  # 윈도우, 위치별 윈도우 합
+    frames = (total + step - 1) // step + buf_len // step - 1  # 프레임 수. 입력을 다 넣는 올림(total / step) + 마지막 샘플이 버퍼를 빠져나가는 buf_len / step - 1. 샘플마다 윈도우의 32 자리를 다 지나야 복원된다
+    buf = [0] * buf_len  # 버퍼. 1.5 처럼 0 으로 시작하고 프레임마다 뒤에 step 개씩 들어온다. 처음 31 프레임은 덜 찬 채로 fft 한다
+    added = [0] * total  # 겹쳐 더한 값. 0 으로 시작한다
+    for frame in range(frames):  # 프레임 0 ~ frames-1
+        for pos in range(buf_len - step):  # 버퍼 번호 pos = 0 ~ buf_len-step-1
+            buf[pos] = buf[pos + step]  # 버퍼의 값을 앞으로 step 칸 당긴다
+        for off in range(step):  # 새로 넣는 칸의 차례 off = 0 ~ step-1
+            src = frame * step + off  # 가져올 샘플 번호
+            if src < total:  # 입력 안이면
+                buf[buf_len - step + off] = samples[src]  # 버퍼의 뒤 step 칸에 새 샘플을 넣는다
+            else:  # 입력이 끝난 뒤면
+                buf[buf_len - step + off] = 0  # 0 을 넣는다
+        windowed = ifft(analyze(buf, window))  # 분석하고 합성. 버퍼에 윈도우를 곱한 값 buf_len 개가 나온다 (복소수)
+        first = (frame + 1) * step - buf_len  # 버퍼의 0 번 칸에 든 샘플의 번호. 맨 뒤 칸이 (frame + 1) * step - 1 번이고 그보다 buf_len - 1 앞이다. 처음 31 프레임은 음수다 (아직 0 인 칸)
+        for slot in range(buf_len):  # 버퍼 번호 slot = 0 ~ buf_len-1
+            dst = first + slot  # 버퍼의 slot 번 칸에 든 샘플의 번호. 더할 자리
+            if 0 <= dst < total:  # 입력에 있는 번호면 (음수와 total 이상은 0 을 채운 칸이라 버린다)
+                added[dst] += windowed[slot].real  # 실수부를 그 샘플의 자리에 더한다
+    restored = []  # 결과를 담을 리스트
+    for idx in range(total):  # 샘플 0 ~ total-1
+        restored.append(added[idx] / sums[idx % step])  # 겹쳐 더한 값을 위치 idx % step 의 윈도우 합으로 나눠 붙인다
     return restored  # 복원한 float 리스트
 
 
@@ -313,5 +327,9 @@ def main():
     tv.compare_wav(INPUT_PATH, OUTPUT_PATH)  # 원본과 비교해 판정과 복원율을 출력한다
 
 
+# 실행 (프로젝트 폴더에서):
+#     .venv\Scripts\python.exe src\main.py
+# 시험:
+#     .venv\Scripts\python.exe -m pytest -v
 if __name__ == "__main__":  # 직접 실행할 때만 main() 을 부른다 (import 될 때는 부르지 않는다)
     main()

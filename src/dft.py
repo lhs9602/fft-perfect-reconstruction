@@ -71,11 +71,17 @@ def restore_no_overlap(samples):
     size = 512  # 블록 하나의 길이
     restored = []  # 되돌린 값을 이어 붙일 리스트
     for start in range(0, len(samples), size):  # 블록 시작 자리 0, 512, 1024, ...
-        block = samples[start:start + size]  # 이번 블록. 마지막 블록은 512 개보다 짧을 수 있다
-        block = block + [0] * (size - len(block))  # 모자란 만큼 0 을 채워 512 개로 맞춘다
+        block = []  # 이번 블록 512 개를 담을 리스트
+        for off in range(size):  # 블록 안의 번호 off = 0 ~ 511
+            src = start + off  # 꺼낼 샘플 번호
+            if src < len(samples):  # 입력 안이면
+                block.append(samples[src])  # 그 샘플을 붙인다
+            else:  # 입력이 끝난 뒤면
+                block.append(0)  # 0 을 붙인다
         y = idft(dft(block))  # 주파수 bin 512 개로 바꿨다가 다시 샘플 512 개로 되돌린다 (값은 복소수)
-        restored.extend(value.real for value in y)  # 실수부만 이어 붙인다
-    restored = restored[:len(samples)]  # 0 을 채운 만큼 길어진 끝을 잘라 입력 길이로 맞춘다
+        for pos in range(size):  # 되돌린 값의 번호 pos = 0 ~ 511
+            if start + pos < len(samples):  # 입력 안의 자리만
+                restored.append(y[pos].real)  # 실수부를 붙인다
     return restored  # 복원한 float 리스트
 
 
